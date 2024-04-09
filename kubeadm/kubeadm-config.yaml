@@ -1,0 +1,7 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: v1.22.0
+networking:
+  podSubnet: "10.244.0.0/16"
+featureGates:
+  DevicePlugins: true
