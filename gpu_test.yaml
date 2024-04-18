@@ -1,0 +1,49 @@
+# Service configuration for multinode.
+apiVersion: v1
+kind: Service
+metadata:
+  name: multinode-svc
+spec:
+  clusterIP: None  # ClusterIP set to None for headless service.
+  ports:
+  - name: nccl  # Port for torchrun master-worker node communication.
+    port: 29500
+    targetPort: 29500
+  selector:
+    job-name: multinode-job  # Selector for pods associated with this service.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multinode-job
+spec:
+  completionMode: Indexed
+  completions: 3
+  parallelism: 3
+  template:
+    spec:
+      containers:
+      - image: pytorch/pytorch:latest
+        name: gpu-container
+        env:
+        - name: MASTER_ADDR
+          value: multinode-job-0.multinode-job  # Node with rank 0 is chosen as the master node.
+        - name: MASTER_PORT
+          value: '29500'
+        - name: NNODES
+          value: '3'  # Number of training nodes.
+        - name: NGPUS
+          value: '1'  # Number of GPUs in the machine.
+        - name: RANK
+          value: $JOB_COMPLETION_INDEX
+        - name: WORLD_SIZE
+          value: '3'
+        ports:
+        - containerPort: 29500
+          name: nccl
+        command: ["sh", "-c", "python -m torch.distributed.launch --nnodes=$NNODES --node_rank=$JOB_COMPLETION_INDEX --nproc_per_node=$NGPUS practice/example.py"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+      subdomain: wokwok  # Required for pod-to-pod communication in Indexed-Jobs.

@@ -70,5 +70,9 @@ sudo apt-get install -y nvidia-container-toolkit
 sudo nvidia-ctk runtime configure --runtime=docker
 
 sudo containerd config default | sudo tee /etc/containerd/config.toml
+sudo nvidia-cli runtime configure --runtime=containerd
+
+CONFIG_FILE="/etc/containerd/config.toml"
+sed -i "/default_runtime_name =/c\      default_runtime_name = \"nvidia\"" $CONFIG_FILE
 sudo systemctl restart containerd.service
 sudo reboot
