@@ -87,10 +87,11 @@ def spmd_main(local_world_size, local_rank):
 
 
 if __name__ == "__main__":
-    print("start program")
+    print("Hello")
     parser = argparse.ArgumentParser()
+    print(parser)
     # This is passed in via launch.py
-    parser.add_argument("--local_rank", type=int, default=0)
+    parser.add_argument("--local-rank", type=int, default=0)
     # This needs to be explicitly passed in
     parser.add_argument("--local_world_size", type=int, default=1)
     args = parser.parse_args()
