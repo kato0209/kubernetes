@@ -18,8 +18,8 @@ metadata:
   name: multinode-job
 spec:
   completionMode: Indexed
-  completions: 3
-  parallelism: 3
+  completions: 2
+  parallelism: 2
   template:
     spec:
       containers:

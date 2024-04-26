@@ -26,19 +26,13 @@ sudo apt install docker-ce docker-ce-cli containerd.io
 
 sudo tee /etc/docker/daemon.json <<EOF
 {
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "default-runtime": "nvidia",
+ "default-runtime": "nvidia",
   "runtimes": {
-        "nvidia": {
-            "path": "/usr/bin/nvidia-container-runtime",
-            "runtimeArgs": []
-        }
-    }
+     "nvidia": {
+         "path": "/usr/bin/nvidia-container-runtime",
+         "runtimeArgs": []
+     }
+ }
 }
 EOF
 
@@ -46,6 +40,12 @@ EOF
 sudo systemctl daemon-reload 
 sudo systemctl restart docker
 sudo systemctl enable docker
+
+sudo apt-get install -y iptables arptables ebtables
+sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+sudo update-alternatives --set arptables /usr/sbin/arptables-legacy
+sudo update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 
 
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key |sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -56,6 +56,11 @@ sudo apt-mark hold kubelet kubeadm kubectl
 sudo add-apt-repository ppa:graphics-drivers/ppa
 sudo apt update
 sudo ubuntu-drivers autoinstall
+
+sudo mkdir /etc/containerd
+sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
+sudo cp -p /etc/containerd/config.toml /etc/containerd/config.toml_`date +%Y%m%d`
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 
 sudo systemctl restart containerd
 
@@ -68,9 +73,10 @@ sudo apt-get update
 sudo apt-get install -y nvidia-container-toolkit
 
 sudo containerd config default | sudo tee /etc/containerd/config.toml
-sudo nvidia-cli runtime configure --runtime=containerd
+sudo nvidia-ctk runtime configure --runtime=containerd
 
 CONFIG_FILE="/etc/containerd/config.toml"
 sed -i "/default_runtime_name =/c\      default_runtime_name = \"nvidia\"" $CONFIG_FILE
+sed -i '/\[plugins\."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options\]/,/\[.*\]/ { /SystemdCgroup/s/false/true/ }' $CONFIG_FILE
 sudo systemctl restart containerd.service
 sudo reboot
