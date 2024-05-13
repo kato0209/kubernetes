@@ -46,6 +46,7 @@ def demo_basic(local_world_size, local_rank):
     labels = torch.randn(20, 5).to(device_ids[0])
     loss_fn(outputs, labels).backward()
     optimizer.step()
+    print("Success!")
 
 
 def spmd_main(local_world_size, local_rank):
@@ -79,6 +80,7 @@ def spmd_main(local_world_size, local_rank):
         f"[{os.getpid()}]: world_size = {dist.get_world_size()}, "
         + f"rank = {dist.get_rank()}, backend={dist.get_backend()} \n", end=''
     )
+    print("pre demo_basic")
 
     demo_basic(local_world_size, local_rank)
 

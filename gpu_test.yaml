@@ -41,26 +41,7 @@ spec:
         ports:
         - containerPort: 29500
           name: nccl
-        command:
-        - bash
-        - -c
-        - |
-          for i in 0 1 
-          do
-            gotStatus="-1"
-            wantStatus="0"             
-            while [ $gotStatus -ne $wantStatus ]
-            do                                       
-              ping -c 1 multinode-job-${i}.multinode-svc.default.svc.cluster.local > /dev/null 2>&1
-              gotStatus=$?                
-              if [ $gotStatus -ne $wantStatus ]; then
-                echo "Failed to ping pod multinode-job-${i}.multinode-svc, retrying in 1 second..."
-                sleep 1
-              fi
-            done                                                         
-            echo "Successfully pinged pod: multinode-job-${i}.multinode-svc"
-          done        
-        #command: ["sh", "-c", "ls ./; echo 'hello' "]
+        command: ["sh", "-c", "torchrun --nnodes=$NNODES --node_rank=$JOB_COMPLETION_INDEX --nproc_per_node=$NGPUS --master_addr $MASTER_ADDR --master_port $MASTER_PORT  example.py"]
         resources:
           limits:
             nvidia.com/gpu: 1
