@@ -91,10 +91,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     print(parser)
     # This is passed in via launch.py
-    parser.add_argument("--local-rank", type=int, default=0)
+    parser.add_argument("--local_rank", type=int, default=0)
     # This needs to be explicitly passed in
     parser.add_argument("--local_world_size", type=int, default=1)
     args = parser.parse_args()
     print(args)
     # The main entry point is called directly without using subprocess
     spmd_main(args.local_world_size, args.local_rank)
+    print("Goodbye")
