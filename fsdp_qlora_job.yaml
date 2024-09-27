@@ -38,10 +38,14 @@ spec:
           value: '2'  # Number of training nodes.
         - name: NGPUS
           value: '1'  # Number of GPUs in the machine.
+        - name: NCCL_DEBUG
+          value: 'ERROR'  # Debug level set to ERROR for production
         ports:
         - containerPort: 29500
           name: nccl
-        command: ["sh", "-c", "torchrun --nnodes=$NNODES --node_rank=$JOB_COMPLETION_INDEX --nproc_per_node=$NGPUS --master_addr $MASTER_ADDR --master_port $MASTER_PORT train.py --world_size=2 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --model_name meta-llama/Llama-2-70b-hf --batch_size 2 --context_length 512 --precision bf16 --train_type qlora --use_gradient_checkpointing true --use_cpu_offload true --dataset alpaca --reentrant_checkpointing true"]
+        #command: ["sh", "-c", "torchrun --nnodes=$NNODES --node_rank=$JOB_COMPLETION_INDEX --nproc_per_node=$NGPUS --master_addr $MASTER_ADDR --master_port $MASTER_PORT train.py --world_size=2 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --model_name meta-llama/Llama-2-7b-hf --batch_size 2 --context_length 512 --precision bf16 --train_type qlora --use_gradient_checkpointing true --use_cpu_offload true --dataset alpaca --reentrant_checkpointing true --verbose True --profile True"]
+        #command: ["sh", "-c", "torchrun --nnodes=$NNODES --node_rank=$JOB_COMPLETION_INDEX --nproc_per_node=$NGPUS --master_addr $MASTER_ADDR --master_port $MASTER_PORT estimate_similarity.py --world_size=2 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --model_name meta-llama/Llama-2-7b-hf --batch_size 2 --context_length 512 --precision bf16 --train_type qlora --use_gradient_checkpointing true --use_cpu_offload true --dataset csdata --reentrant_checkpointing true --verbose True --sharding_strategy shard_grad_op"]
+        command: ["sh", "-c", "torchrun --nnodes=$NNODES --node_rank=$JOB_COMPLETION_INDEX --nproc_per_node=$NGPUS --master_addr $MASTER_ADDR --master_port $MASTER_PORT selective_code_rewriter.py --world_size=2 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --model_name meta-llama/Llama-2-7b-hf --batch_size 2 --context_length 512 --precision bf16 --train_type qlora --use_gradient_checkpointing true --use_cpu_offload true --dataset csdata --reentrant_checkpointing true --verbose True --sharding_strategy hybrid_full_shard"]
         resources:
           limits:
             nvidia.com/gpu: 1
